@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Example page</title>
+</head>
+<body>
+  <h1>Example page</h1>
+  <p>Click the button below to log in via GOV.UK One Login</p>
+  <form method="get" action="{% url 'one_login:login' %}">
+    <button type="submit">Log in</button>
+  </form>
+  <hr/>
+  <p>Alternatively click the following link to try to navigate to a view requiring a logged-in user.</p>
+  <p>You will be redirected to this page until you click Log in above.</p>
+  <a href="{% url 'logged_in_view' %}">Click me</a>
+</body>
+</html>
