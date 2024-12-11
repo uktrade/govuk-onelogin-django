@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Logged in page</title>
+</head>
+<body>
+  <h1>Logged in page</h1>
+  <h3>Shown below are several fields relating to the logged-in user</h3>
+  <p>Username is the unique identifier provided by GOV.UK One Login: <b>{{ request.user.username }}</b></p>
+  <p>Email address used by user to log in to GOV.UK One Login: <b>{{ request.user.email }}</b></p>
+  <p>Has usable password is False when a GOV.UK One Login user is created: <b>{{ has_usable_password }}</b></p>
+  <hr/>
+  <p>The users first and last name are not returned by GOV.UK One Login unless identification verification is performed</p>
+  <p>First name: <b>{{ request.user.first_name }}</b></p>
+  <p>Last name: <b>{{ request.user.last_name }}</b></p>
+  <hr/>
+  <p>Press this if you would like to log out of GOV.UK One Login</p>
+
+  <form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button class="button link-button" type="submit">Log out</button>
+  </form>
+</body>
+</html>

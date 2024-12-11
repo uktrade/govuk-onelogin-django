@@ -1,0 +1,53 @@
+[project]
+name = "govuk-onelogin-django"
+version = "0.1.0"
+description = "OpenID Connect client that works with GOV.UK One Login"
+readme = "README.md"
+authors = [
+    { name = "Matthew Holmes", email = "matthew.holmes@digital.trade.gov.uk" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "authlib==1.3.2",
+    "django>=4.2",
+    "requests>=2.32.3",
+]
+
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#keywords
+keywords = []
+
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#classifiers
+classifiers = []
+
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#urls
+#[project.urls]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest-django>=4.9.0",
+    "pytest>=8.3.4",
+    "requests-mock>=1.12.1",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "govuk_onelogin_django.tests.test_settings"
+pythonpath = ["."]
+
+
+[[tool.mypy.overrides]]
+module = [
+    "django.*",
+    "pytest.*",
+    "authlib.*",
+    "requests.*",
+    "pydantic.*",
+    "pydantic_settings.*"
+]
+ignore_missing_imports = true
+
+[tool.isort]
+profile = "black"
