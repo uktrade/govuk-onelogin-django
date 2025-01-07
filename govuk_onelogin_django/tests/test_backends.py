@@ -16,12 +16,14 @@ from govuk_onelogin_django.types import UserInfo
 def test_user_valid_user_create(db, rf, **mocks):
     mocks["has_valid_token"].return_value = True
     mocks["get_userinfo"].return_value = UserInfo(
-        sub="some-unique-key", email="user@test.com", email_verified=True  # /PS-IGNORE
+        sub="some-unique-key",
+        email="user@example.com",
+        email_verified=True,
     )
 
     user = OneLoginBackend().authenticate(rf)
     assert user is not None
-    assert user.email == "user@test.com"  # /PS-IGNORE
+    assert user.email == "user@example.com"
     assert user.username == "some-unique-key"
     assert user.has_usable_password() is False
 
@@ -37,7 +39,7 @@ def test_user_valid_user_not_create(db, rf, **mocks):
     User = get_user_model()
     user = User(
         username="some-unique-key",
-        email="user@test.com",  # /PS-IGNORE
+        email="user@example.com",
         first_name="Test",
         last_name="User",
     )
@@ -46,7 +48,9 @@ def test_user_valid_user_not_create(db, rf, **mocks):
 
     mocks["has_valid_token"].return_value = True
     mocks["get_userinfo"].return_value = UserInfo(
-        sub="some-unique-key", email="user@test.com", email_verified=True  # /PS-IGNORE
+        sub="some-unique-key",
+        email="user@example.com",
+        email_verified=True,
     )
 
     user = OneLoginBackend().authenticate(request=rf)
@@ -54,7 +58,7 @@ def test_user_valid_user_not_create(db, rf, **mocks):
 
     assert user.first_name == "Test"
     assert user.last_name == "User"
-    assert user.email == "user@test.com"  # /PS-IGNORE
+    assert user.email == "user@example.com"
     assert user.has_usable_password() is True
 
 
@@ -69,7 +73,7 @@ def test_user_inactive(db, rf, **mocks):
     User = get_user_model()
     user = User(
         username="some-unique-key",
-        email="user@test.com",  # /PS-IGNORE
+        email="user@example.com",
         first_name="Test",
         last_name="User",
         is_active=False,
@@ -79,7 +83,9 @@ def test_user_inactive(db, rf, **mocks):
 
     mocks["has_valid_token"].return_value = True
     mocks["get_userinfo"].return_value = UserInfo(
-        sub="some-unique-key", email="user@test.com", email_verified=True  # /PS-IGNORE
+        sub="some-unique-key",
+        email="user@example.com",
+        email_verified=True,
     )
 
     user = OneLoginBackend().authenticate(request=rf)
@@ -102,7 +108,7 @@ def test_get_user_user_exists(db):
     User = get_user_model()
     user = User(
         username="some-unique-key",
-        email="user@test.com",  # /PS-IGNORE
+        email="user@example.com",
         first_name="Test",
         last_name="User",
     )

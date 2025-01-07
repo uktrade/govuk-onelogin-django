@@ -186,7 +186,7 @@ def delete_oauth_nonce(request: HttpRequest) -> None:
 
 def get_secret(request: HttpRequest) -> bytes:
     # key is stored like this: base64 -i private_key.pem so decode.
-    return base64.b64decode(get_client_secret(request))  # /PS-IGNORE
+    return base64.b64decode(get_client_secret(request))
 
 
 def get_scope():
