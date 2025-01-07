@@ -71,4 +71,4 @@ Before starting, you should create an example app using the GOV.OK One Login [ad
 - Run the Ruff linter: `uv run ruff check`
 - Resolve fixable errors: `uv run ruff check --fix`
 - Run the Ruff formatter: `uv run ruff format`
-- mypy: `uv run mypy --config-file=pyproject.toml govuk_onelogin_django`
+- mypy: `uv run mypy --config-file=pyproject.toml`
