@@ -39,6 +39,8 @@ dev = [
 DJANGO_SETTINGS_MODULE = "govuk_onelogin_django.tests.test_settings"
 pythonpath = ["."]
 
+[tool.mypy]
+packages = "govuk_onelogin_django"
 
 [[tool.mypy.overrides]]
 module = [
