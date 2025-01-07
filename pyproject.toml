@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "OpenID Connect client that works with GOV.UK One Login"
 readme = "README.md"
 authors = [
-    { name = "Matthew Holmes", email = "matthew.holmes@digital.trade.gov.uk" }
+    { name = "Matthew Holmes", email = "matthew.holmes@digital.trade.gov.uk" },
 ]
 requires-python = ">=3.11"
 dependencies = [
@@ -35,6 +35,9 @@ dev = [
     "ruff>=0.8.6",
 ]
 
+[tool.hatch.build.targets.sdist]
+exclude = ["example_project/"]
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "govuk_onelogin_django.tests.test_settings"
 pythonpath = ["."]
@@ -49,7 +52,7 @@ module = [
     "authlib.*",
     "requests.*",
     "pydantic.*",
-    "pydantic_settings.*"
+    "pydantic_settings.*",
 ]
 ignore_missing_imports = true
 
