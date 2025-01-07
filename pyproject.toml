@@ -31,6 +31,8 @@ dev = [
     "pytest-django>=4.9.0",
     "pytest>=8.3.4",
     "requests-mock>=1.12.1",
+    "pre-commit>=4.0.1",
+    "ruff>=0.8.6",
 ]
 
 [tool.pytest.ini_options]

@@ -12,9 +12,9 @@ from govuk_onelogin_django.utils import TOKEN_SESSION_KEY, get_one_login_logout_
 def test_get_one_login_logout_url(
     db, client: Client, rf: RequestFactory, **mocks: Any
 ) -> None:
-    mocks["OneLoginConfig"].return_value.end_session_url = (
-        "https://fake-one.login.gov.uk/logout/"
-    )
+    mocks[
+        "OneLoginConfig"
+    ].return_value.end_session_url = "https://fake-one.login.gov.uk/logout/"
 
     request = rf.request()
     request.session = client.session
