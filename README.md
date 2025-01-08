@@ -72,3 +72,6 @@ Before starting, you should create an example app using the GOV.OK One Login [ad
 - Resolve fixable errors: `uv run ruff check --fix`
 - Run the Ruff formatter: `uv run ruff format`
 - mypy: `uv run mypy --config-file=pyproject.toml`
+
+## Publishing
+- Publish to PyPI: `uv publish --token <token>`

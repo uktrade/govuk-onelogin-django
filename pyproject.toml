@@ -3,8 +3,12 @@ name = "govuk-onelogin-django"
 version = "0.1.0"
 description = "OpenID Connect client that works with GOV.UK One Login"
 readme = "README.md"
+license = {file = "LICENSE"}
 authors = [
     { name = "Matthew Holmes", email = "matthew.holmes@digital.trade.gov.uk" },
+]
+maintainers = [
+  {name = "Matthew Holmes", email = "matthew.holmes@digital.trade.gov.uk"}
 ]
 requires-python = ">=3.11"
 dependencies = [
@@ -14,13 +18,29 @@ dependencies = [
 ]
 
 # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#keywords
-keywords = []
+keywords = [
+    "GOV.UK One Login",
+    "OpenID Connect",
+]
 
 # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#classifiers
-classifiers = []
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
 
 # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#urls
-#[project.urls]
+[project.urls]
+homepage = "https://github.com/uktrade/govuk-onelogin-django"
+source = "https://github.com/uktrade/govuk-onelogin-django"
+releasenotes = "https://github.com/uktrade/govuk-onelogin-django/releases"
+issues = "https://github.com/uktrade/govuk-onelogin-django/issues"
 
 [build-system]
 requires = ["hatchling"]
