@@ -53,6 +53,8 @@ dev = [
     "requests-mock>=1.12.1",
     "pre-commit>=4.0.1",
     "ruff>=0.8.6",
+    "coverage>=7.6.10",
+    "freezegun>=1.5.1",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -78,3 +80,9 @@ ignore_missing_imports = true
 
 [tool.isort]
 profile = "black"
+
+
+[tool.coverage.report]
+exclude_lines = [
+    "if TYPE_CHECKING:"
+]
