@@ -28,7 +28,7 @@ SECRET_KEY = "django-insecure-npu=_%vz$0s(uz@izc^m!g$7ge7u_(%$5nf8y_z&y8o_i+gizi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: list[str] = ["*"]
 
 
 # Application definition

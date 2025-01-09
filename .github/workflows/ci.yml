@@ -36,6 +36,11 @@ jobs:
 
       - name: Run tests
         run: uv run pytest
+
+      - name: Check coverage
+        run: |
+          uv run coverage run --source=govuk_onelogin_django -m pytest
+          uv run coverage report --fail-under=95
 # TODO: Fix mypy
 #      - name: Run mypy
 #        run: uv run mypy --config-file=pyproject.toml
