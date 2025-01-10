@@ -27,12 +27,12 @@ from django.views.generic.base import RedirectView, View
 from .types import AuthenticationLevel, IdentityConfidenceLevel
 from .utils import (
     TOKEN_SESSION_KEY,
-    OneLoginConfig,
     delete_oauth_nonce,
     delete_oauth_state,
     get_client,
     get_client_id,
     get_oauth_state,
+    get_oidc_config,
     get_token,
     store_oauth_nonce,
     store_oauth_state,
@@ -72,7 +72,7 @@ def get_next_url(request):
 class AuthView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         client = get_client(self.request)
-        config = OneLoginConfig()
+        config = get_oidc_config()
 
         nonce = generate_token()
         trust_vector = get_trust_vector(
@@ -183,7 +183,7 @@ class OIDCBackChannelLogoutView(View):
         """
 
         logout_token = self.request.POST.get("logout_token")
-        config = OneLoginConfig()
+        config = get_oidc_config()
 
         claim_options = {
             "iss": {"essential": True, "value": config.issuer},

@@ -216,7 +216,7 @@ class TestOIDCBackChannelLogoutView:
 
         assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
-    @freezegun.freeze_time("10:49:00")
+    @freezegun.freeze_time("2025-1-13 10:49:00")
     def test_oidc_back_channel_logout_successful(self, caplog):
         # Check the user session has been removed after the back-channel logout request.
         assert Session.objects.count() == 1
@@ -260,7 +260,7 @@ class TestOIDCBackChannelLogoutView:
             )
         ]
 
-    @freezegun.freeze_time("10:49:00")
+    @freezegun.freeze_time("2025-1-13 10:49:00")
     def test_oidc_back_channel_logout_user_sub_error(self, caplog):
         self.user.username = "test_user_name"
         self.user.save()

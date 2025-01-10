@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+from importlib import import_module
 from typing import Any
 
 import requests
@@ -12,7 +13,6 @@ from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpRequest, QueryDict
 from django.urls import reverse
-from django.utils.module_loading import import_string
 
 from . import types
 
@@ -107,7 +107,7 @@ class OneLoginConfig:
 
 def get_token(request: HttpRequest, auth_code: str) -> dict:
     client = get_client(request)
-    config = OneLoginConfig()
+    config = get_oidc_config()
 
     client.register_client_auth_method(PrivateKeyJWT(token_endpoint=config.token_url))
 
@@ -129,7 +129,7 @@ def get_token(request: HttpRequest, auth_code: str) -> dict:
 
 
 def validate_token(request: HttpRequest, token: dict[str, Any]) -> None:
-    config = OneLoginConfig()
+    config = get_oidc_config()
     stored_nonce = get_oauth_nonce(request)
 
     # id_token contents:
@@ -148,7 +148,7 @@ def validate_token(request: HttpRequest, token: dict[str, Any]) -> None:
 
 
 def get_userinfo(client: OAuth2Session) -> types.UserInfo:
-    config = OneLoginConfig()
+    config = get_oidc_config()
     resp = client.get(config.userinfo_url)
     resp.raise_for_status()
 
@@ -201,16 +201,40 @@ def get_client_id(request: HttpRequest) -> str:
     """
 
     if path := getattr(settings, "GOV_UK_ONE_LOGIN_GET_CLIENT_CONFIG_PATH", None):
-        logger.debug(f"Using {path} to find get_one_login_client_id function.")
+        config_utils = import_module(path)
 
-        get_one_login_client_id = import_string(f"{path}.get_one_login_client_id")
-
-        return get_one_login_client_id(request)
+        if hasattr(config_utils, "get_one_login_client_id"):
+            logger.debug(f"Using {path} to find get_one_login_client_id function.")
+            return config_utils.get_one_login_client_id(request)
 
     logger.debug("Using GOV_UK_ONE_LOGIN_CLIENT_ID to find client secret.")
 
     # Default if custom function not defined
     return getattr(settings, "GOV_UK_ONE_LOGIN_CLIENT_ID", "")
+
+
+def get_oidc_config() -> OneLoginConfig:
+    """Fetch the OneLoginConfig class in one of two ways.
+
+    1. Using a function called get_one_login_config defined in the module specified at
+       GOV_UK_ONE_LOGIN_GET_CLIENT_CONFIG_PATH setting.
+    2. Returning the default OneLoginConfig class.
+    """
+
+    if path := getattr(settings, "GOV_UK_ONE_LOGIN_GET_CLIENT_CONFIG_PATH", None):
+        config_utils = import_module(path)
+
+        if hasattr(config_utils, "get_one_login_config"):
+            CustomConfigCls = config_utils.get_one_login_config()
+
+            logger.debug(f"Using custom {CustomConfigCls!r} class.")
+
+            return CustomConfigCls()
+
+    logger.debug("Using default OneLoginConfig class.")
+
+    # Default if custom class not defined
+    return OneLoginConfig()
 
 
 def get_client_secret(request: HttpRequest) -> str:
@@ -222,13 +246,11 @@ def get_client_secret(request: HttpRequest) -> str:
     """
 
     if path := getattr(settings, "GOV_UK_ONE_LOGIN_GET_CLIENT_CONFIG_PATH", None):
-        logger.debug(f"Using {path} to find get_one_login_client_secret function.")
+        config_utils = import_module(path)
 
-        get_one_login_client_secret = import_string(
-            f"{path}.get_one_login_client_secret"
-        )
-
-        return get_one_login_client_secret(request)
+        if hasattr(config_utils, "get_one_login_client_secret"):
+            logger.debug(f"Using {path} to find get_one_login_client_secret function.")
+            return config_utils.get_one_login_client_secret(request)
 
     logger.debug("Using GOV_UK_ONE_LOGIN_CLIENT_SECRET to find client secret.")
 
@@ -246,8 +268,8 @@ def get_one_login_logout_url(
     :param request: Django HttpRequest instance
     :param post_logout_redirect_uri: Optional redirect url
     """
-
-    url = OneLoginConfig().end_session_url
+    config = get_oidc_config()
+    url = config.end_session_url
 
     if post_logout_redirect_uri:
         qd = QueryDict(mutable=True)
