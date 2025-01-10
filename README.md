@@ -4,6 +4,7 @@ OpenID Connect client that works with GOV.UK One Login.
 Package provides the following endpoints:
 - `one-login/login/` to login via GOV.UK One Login.
 - `one-login/callback/` endpoint GOV.UK One Login will send logged-in users back to.
+- `back-channel-logout/` endpoint GOV.UK One Login will send logout notifications to.
 
 The example project also provides an [example logout view](example_project/example/views.py) that will log the user out of your service as well as GOV.UK One Login.
 
@@ -53,7 +54,15 @@ Before starting, you should create an example app using the GOV.OK One Login [ad
 
     See [this document](https://docs.sign-in.service.gov.uk/before-integrating/set-up-your-public-and-private-keys/#set-up-your-public-and-private-keys) detailing how to generate your keys.
 
-5. Alternatively see the example_project [README.md](example_project/README.md) for details on how to build and run the example project.
+## Configuration
+See [configuration](documentation/configuration.md) document detailing how to override the following:
+- Service logout behaviour of back-channel-logout/ endpoint
+- Override how GOV.UK One Login config is fetched
+- how GOV_UK_ONE_LOGIN_CLIENT_ID is loaded
+- How GOV_UK_ONE_LOGIN_CLIENT_SECRET is loaded
+
+## Example project
+See the example_project [README.md](example_project/README.md) for details on how to build and run the example project.
 
 
 ## Commands to build and test govuk-onelogin-django
