@@ -214,6 +214,28 @@ def get_client_id(request: HttpRequest) -> str:
     return getattr(settings, "GOV_UK_ONE_LOGIN_CLIENT_ID", "")
 
 
+def get_one_login_config() -> OneLoginConfig:
+    """Fetch the OneLoginConfig class in one of two ways.
+
+    1. Using a function called get_one_login_config_class defined in the module specified at
+       GOV_UK_ONE_LOGIN_GET_CLIENT_CONFIG_PATH setting.
+    2. Returning the default OneLoginConfig class.
+    """
+
+    if path := getattr(settings, "GOV_UK_ONE_LOGIN_GET_CLIENT_CONFIG_PATH", None):
+        logger.debug(f"Using {path} to find get_one_login_client_secret function.")
+
+        CustomConfigCls = import_string(f"{path}.get_one_login_config_class")
+        logger.debug(f"Using custom {CustomConfigCls!r} class.")
+
+        return CustomConfigCls()
+
+    logger.debug("Using default OneLoginConfig class.")
+
+    # Default if custom class not defined
+    return OneLoginConfig()
+
+
 def get_client_secret(request: HttpRequest) -> str:
     """Fetch the client secret in one of two ways.
 
