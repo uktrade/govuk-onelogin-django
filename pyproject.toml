@@ -15,8 +15,6 @@ dependencies = [
     "authlib==1.3.2",
     "django>=4.2",
     "requests>=2.32.4",
-    # Added until requests upgrades urllib3 dependency
-    "urllib3>=2.5.0",
 ]
 
 # https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#keywords
