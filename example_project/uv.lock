@@ -214,7 +214,6 @@ dependencies = [
     { name = "authlib" },
     { name = "django" },
     { name = "requests" },
-    { name = "urllib3" },
 ]
 sdist = { path = "govuk_onelogin_django-0.3.0.tar.gz" }
 wheels = [
