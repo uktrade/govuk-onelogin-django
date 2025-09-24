@@ -232,7 +232,7 @@ class TestOIDCBackChannelLogoutView:
             (
                 "govuk_onelogin_django.views",
                 logging.ERROR,
-                'OIDCBackChannelLogoutView: Logout Token invalid: invalid_claim: Invalid claim "jti"',
+                "OIDCBackChannelLogoutView: Logout Token invalid: invalid_claim: Invalid claim 'jti'",
             )
         ]
 
