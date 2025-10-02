@@ -253,22 +253,22 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "django", specifier = ">=4.2" },
-    { name = "govuk-onelogin-django", specifier = ">=0.4.0" },
+    { name = "govuk-onelogin-django", specifier = ">=0.4.1" },
     { name = "pydantic-settings", specifier = ">=2.7.0" },
 ]
 
 [[package]]
 name = "govuk-onelogin-django"
-version = "0.4.0"
-source = { registry = "https://pypi.org/simple" }
+version = "0.4.1"
+source = { registry = "../dist" }
 dependencies = [
     { name = "authlib" },
     { name = "django" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/25/1f/6b69a7f8a64d3735e2b0d00f350fb1514d212c47d36472abf7715cb3d4d1/govuk_onelogin_django-0.4.0.tar.gz", hash = "sha256:0645ca80efa8bf550a256e7f7ae28c48ee67fc671de85a1c1adb67a91deff9b1", size = 69000, upload-time = "2025-09-24T14:01:42.175Z" }
+sdist = { path = "govuk_onelogin_django-0.4.1.tar.gz" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/97/86/f1a5cb4023620fa9c33f17708956666ae3cb2bfb78f13582f73f59e25c8d/govuk_onelogin_django-0.4.0-py3-none-any.whl", hash = "sha256:10e4b95f6a5a59f8a2071c9d5dff8fd7ce28f38a9a2334fdf8ac66a12c19ea3c", size = 20280, upload-time = "2025-09-24T14:01:40.844Z" },
+    { path = "govuk_onelogin_django-0.4.1-py3-none-any.whl" },
 ]
 
 [[package]]
