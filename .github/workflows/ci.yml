@@ -1,6 +1,10 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
 name: GOV.UK One Login Django CI
+# TODO: Revisit these in ECIL-1197 (Automate publish to PyPI when a release is created)
+permissions:
+  contents: read
+  pull-requests: write
 
 on:
   push:
