@@ -11,7 +11,7 @@ This checklist is designed to make it easier to improve the security posture of 
 
 - [x] [Setup the pre-commit hook framework](#setup-the-pre-commit-hook-framework)
 - [x] [Setup custom properties on the repository](#setup-custom-properties-on-the-repository)
-- [ ] [Apply the correct github security policy](#apply-the-correct-github-security-policy)
+- [x] [Apply the correct github security policy](#apply-the-correct-github-security-policy)
 - [x] [Ensure CODEOWNERS file exists](#ensure-codeowners-file-exists)
 - [x] [Copy the SECURITY_CHECKLIST.md file](#copy-the-security_checklistmd-file)
 - [x] [Review the GitHub CI/CD overview](#review-the-github-cicd-overview)
