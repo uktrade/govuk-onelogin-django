@@ -83,4 +83,7 @@ See the example_project [README.md](example_project/README.md) for details on ho
 - mypy: `uv run mypy --config-file=pyproject.toml`
 
 ## Publishing
+- View the current project version: `uv version`
+- Update the project version with dryrun: `uv version --bump minor --dry-run`
+- Update the project version: `uv version --bump minor`
 - Publish to PyPI: `uv publish --token <token>`
