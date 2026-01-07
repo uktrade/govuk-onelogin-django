@@ -1,3 +1,4 @@
+# Followed this: https://docs.astral.sh/uv/guides/integration/github/#publishing-to-pypi
 name: "Publish"
 
 on:
