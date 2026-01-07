@@ -22,12 +22,12 @@ jobs:
         python-version: [ 3.11, 3.12, 3.13 ]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install uv and set the python version
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
-          # Install a specific version of uv.
-          version: "0.5.15"
+          # Install a specific version of uv (match local).
+          version: "0.9.22"
           # Install with matrix python version
           python-version: ${{ matrix.python-version }}
           # Enable caching
