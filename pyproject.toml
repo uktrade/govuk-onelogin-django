@@ -1,6 +1,6 @@
 [project]
 name = "govuk-onelogin-django"
-version = "0.4.6"
+version = "0.4.7"
 description = "OpenID Connect client that works with GOV.UK One Login"
 readme = "README.md"
 license = {file = "LICENSE"}
