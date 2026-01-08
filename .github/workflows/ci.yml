@@ -12,6 +12,15 @@ on:
     branches: [ "main" ]
 
 jobs:
+  ruff:
+    name: Ruff formatting and linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/ruff-action@v3
+        with:
+          version: 0.14.10
+
   build:
     name: continuous-integration
     runs-on: ubuntu-latest
