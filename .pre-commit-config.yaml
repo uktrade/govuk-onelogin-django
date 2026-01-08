@@ -28,11 +28,11 @@ repos:
       - id: check-added-large-files
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.14.9
+    rev: v0.14.10
     hooks:
-      # Run the linter (--select=I to fix imports).
-      - id: ruff
-        args: [ --select=I, --fix ]
+      # Run the linter.
+      - id: ruff-check
+        args: [ --fix ]
       # Run the formatter.
       - id: ruff-format
   - repo: https://github.com/astral-sh/uv-pre-commit
