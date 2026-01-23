@@ -14,3 +14,8 @@ coverage:
 
 coverage-html:
 	uv run coverage html
+
+format: ## Run the Ruff formatter
+	# https://docs.astral.sh/ruff/formatter/#sorting-imports
+	uv run ruff check --select I --fix
+	uv run ruff format
