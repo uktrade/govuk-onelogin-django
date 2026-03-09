@@ -97,14 +97,25 @@ class AuthCallbackView(View):
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> Any:
         auth_code = self.request.GET.get("code", None)
 
-        if not auth_code:
-            logger.error("No auth code returned from one_login")
-            return redirect(settings.LOGIN_URL)
-
         state = get_oauth_state(self.request)
-        if not state:
-            logger.error("No state found in session")
-            raise SuspiciousOperation("No state found in session")
+        if not auth_code or not state:
+            messages = {
+                "auth_code": "Auth code returned from one_login",
+                "no_auth_code": "No auth code returned from one_login",
+                "state": "state found in session",
+                "no_state": "no state found in session",
+            }
+            auth_code_msg = (
+                messages["auth_code"] if auth_code else messages["no_auth_code"]
+            )
+            state_msg = messages["state"] if state else messages["no_state"]
+            conjunction = "and" if not auth_code and not state else "but"
+            msg = (
+                "Redirecting to login, missing precondition(s):"
+                f" {auth_code_msg} {conjunction} {state_msg}"
+            )
+            logger.warning(msg)
+            return redirect(settings.LOGIN_URL)
 
         auth_service_state = self.request.GET.get("state")
         if state != auth_service_state:
