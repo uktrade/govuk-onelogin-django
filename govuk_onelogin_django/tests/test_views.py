@@ -125,20 +125,43 @@ class TestAuthCallbackView:
         assert response.status_code == HTTPStatus.FOUND
         assert response.url == next_url
 
-    def test_auth_callback_view_no_code(self, caplog):
+    def test_auth_callback_view_no_code_or_session_state(self, caplog):
         response = self.client.get(f"{self.url}")
 
         assert response.status_code == HTTPStatus.FOUND
         assert response.url == settings.LOGIN_URL
-        assert caplog.messages[0] == "No auth code returned from one_login"
+        expected = (
+            "Redirecting to login, missing precondition(s):"
+            " No auth code returned from one_login and no state found in session"
+        )
+        assert caplog.messages[0] == expected
 
     def test_auth_callback_view_no_session_state(self, caplog):
         auth_code = "fake-auth-code"
         state = "fake-state"
 
         response = self.client.get(f"{self.url}?code={auth_code}&state={state}")
-        assert response.status_code == HTTPStatus.BAD_REQUEST
-        assert caplog.messages[0] == "No state found in session"
+        assert response.status_code == HTTPStatus.FOUND
+        expected = (
+            "Redirecting to login, missing precondition(s):"
+            " Auth code returned from one_login but no state found in session"
+        )
+        assert caplog.messages[0] == expected
+
+    @mock.patch.multiple(
+        "govuk_onelogin_django.views", get_oauth_state=mock.DEFAULT, autospec=True
+    )
+    def test_auth_callback_view_no_code_with_session_state(self, caplog, **mocks):
+        state = "fake-state"
+        mocks["get_oauth_state"].return_value = "fake-state"
+
+        response = self.client.get(f"{self.url}?state={state}")
+        assert response.status_code == HTTPStatus.FOUND
+        expected = (
+            "Redirecting to login, missing precondition(s):"
+            " No auth code returned from one_login but state found in session"
+        )
+        assert caplog.messages[0] == expected
 
     @mock.patch.multiple(
         "govuk_onelogin_django.views", get_oauth_state=mock.DEFAULT, autospec=True
