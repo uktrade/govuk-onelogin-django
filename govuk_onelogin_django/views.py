@@ -45,7 +45,7 @@ UserModel = get_user_model()
 def get_trust_vector(
     auth_level: AuthenticationLevel, identity_level: IdentityConfidenceLevel
 ) -> dict[str, str]:
-    return {"vtr": f"['{auth_level}.{identity_level}']"}
+    return {"vtr": f'["{auth_level}.{identity_level}"]'}
 
 
 REDIRECT_SESSION_FIELD_NAME = f"_oauth2_{REDIRECT_FIELD_NAME}"
