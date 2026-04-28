@@ -118,9 +118,6 @@ def get_token(request: HttpRequest, auth_code: str) -> dict:
         # If you’re requesting a refresh token, you must set this parameter to refresh_token.
         # Otherwise, you need to set the parameter to authorization_code.
         grant_type="authorization_code",
-        # https://docs.sign-in.service.gov.uk/integrate-with-integration-environment/authenticate-your-user/#make-a-post-request-to-the-token-endpoint
-        # Required value when using private_key_jwt auth.
-        client_assertion_type="urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
     )
 
     validate_token(request, token)
