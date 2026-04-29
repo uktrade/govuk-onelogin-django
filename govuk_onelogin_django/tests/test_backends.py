@@ -11,6 +11,8 @@ from govuk_onelogin_django.types import UserInfo
     get_client=mock.DEFAULT,
     has_valid_token=mock.DEFAULT,
     get_userinfo=mock.DEFAULT,
+    log_successful_login=mock.DEFAULT,
+    log_failed_login=mock.DEFAULT,
     autospec=True,
 )
 def test_user_valid_user_create(db, rf, **mocks):
@@ -33,6 +35,8 @@ def test_user_valid_user_create(db, rf, **mocks):
     get_client=mock.DEFAULT,
     has_valid_token=mock.DEFAULT,
     get_userinfo=mock.DEFAULT,
+    log_successful_login=mock.DEFAULT,
+    log_failed_login=mock.DEFAULT,
     autospec=True,
 )
 def test_user_valid_user_not_create(db, rf, **mocks):
@@ -67,6 +71,8 @@ def test_user_valid_user_not_create(db, rf, **mocks):
     get_client=mock.DEFAULT,
     has_valid_token=mock.DEFAULT,
     get_userinfo=mock.DEFAULT,
+    log_successful_login=mock.DEFAULT,
+    log_failed_login=mock.DEFAULT,
     autospec=True,
 )
 def test_user_inactive(db, rf, **mocks):
@@ -97,6 +103,8 @@ def test_user_inactive(db, rf, **mocks):
     get_client=mock.DEFAULT,
     has_valid_token=mock.DEFAULT,
     get_userinfo=mock.DEFAULT,
+    log_successful_login=mock.DEFAULT,
+    log_failed_login=mock.DEFAULT,
     autospec=True,
 )
 def test_invalid_user(db, rf, **mocks):
