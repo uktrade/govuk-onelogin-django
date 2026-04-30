@@ -5,8 +5,6 @@ from django.contrib.auth import get_user_model
 from govuk_onelogin_django.backends import OneLoginBackend
 from govuk_onelogin_django.types import UserInfo
 
-from govuk_onelogin_django.tests.test_logging import assert_event_logged
-
 
 @mock.patch.multiple(
     "govuk_onelogin_django.backends",
@@ -138,17 +136,25 @@ def test_get_user_user_doesnt_exist(db):
     get_userinfo=mock.DEFAULT,
     autospec=True,
 )
-def test_valid_user_logs_success(db, capsys, rf, **mocks):
+def test_valid_user_logs_success(db, rf, **mocks):
     mocks["has_valid_token"].return_value = True
     mocks["get_userinfo"].return_value = UserInfo(
         sub="some-unique-key",
         email="user@example.com",
         email_verified=True,
     )
-    request = rf.get("/")
-    OneLoginBackend().authenticate(request=request)
-
-    assert_event_logged(capsys, "Logon", "Success", "user@example.com")
+    with mock.patch("govuk_onelogin_django.logging.log_authentication") as mock_log:
+        request = rf.get("/")
+        OneLoginBackend().authenticate(request=request)
+        mock_log.assert_called_once_with(
+            mock.ANY,
+            event=mock_log.Event.Logon,
+            result=mock_log.Result.Success,
+            login_method=mock_log.LoginMethod.UKGOVSSO,
+            user={
+                "username": "user@example.com",
+            },
+        )
 
 
 @mock.patch.multiple(
@@ -158,8 +164,14 @@ def test_valid_user_logs_success(db, capsys, rf, **mocks):
     get_userinfo=mock.DEFAULT,
     autospec=True,
 )
-def test_invalid_user_logs_failure(db, capsys, rf, **mocks):
+def test_invalid_user_logs_failure(db, rf, **mocks):
     mocks["has_valid_token"].return_value = False
-    request = rf.get("/")
-    assert OneLoginBackend().authenticate(request=request) is None
-    assert_event_logged(capsys, "Logon", "Failure")
+    with mock.patch("govuk_onelogin_django.logging.log_authentication") as mock_log:
+        request = rf.get("/")
+        assert OneLoginBackend().authenticate(request=request) is None
+        mock_log.assert_called_once_with(
+            mock.ANY,
+            event=mock_log.Event.Logon,
+            result=mock_log.Result.Failure,
+            login_method=mock_log.LoginMethod.UKGOVSSO,
+        )
