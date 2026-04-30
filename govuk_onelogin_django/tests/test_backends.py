@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from govuk_onelogin_django.backends import OneLoginBackend
 from govuk_onelogin_django.types import UserInfo
 
+from govuk_onelogin_django.tests.test_logging import assert_event_logged
 
 @mock.patch.multiple(
     "govuk_onelogin_django.backends",
@@ -127,3 +128,37 @@ def test_get_user_user_exists(db):
 
 def test_get_user_user_doesnt_exist(db):
     assert OneLoginBackend().get_user(99999) is None
+
+
+@mock.patch.multiple(
+    "govuk_onelogin_django.backends",
+    get_client=mock.DEFAULT,
+    has_valid_token=mock.DEFAULT,
+    get_userinfo=mock.DEFAULT,
+    autospec=True,
+)
+def test_valid_user_logs_success(db, capsys, rf, **mocks):
+    mocks["has_valid_token"].return_value = True
+    mocks["get_userinfo"].return_value = UserInfo(
+        sub="some-unique-key",
+        email="user@example.com",
+        email_verified=True,
+    )
+    request = rf.get('/')
+    OneLoginBackend().authenticate(request=request)
+
+    assert_event_logged(capsys, "Logon", "Success", "user@example.com")
+
+
+@mock.patch.multiple(
+    "govuk_onelogin_django.backends",
+    get_client=mock.DEFAULT,
+    has_valid_token=mock.DEFAULT,
+    get_userinfo=mock.DEFAULT,
+    autospec=True,
+)
+def test_invalid_user_logs_failure(db, capsys, rf, **mocks):
+    mocks["has_valid_token"].return_value = False
+    request = rf.get('/')
+    assert OneLoginBackend().authenticate(request=request) is None
+    assert_event_logged(capsys, "Logon", "Failure")
