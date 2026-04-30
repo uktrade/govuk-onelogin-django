@@ -7,6 +7,7 @@ from govuk_onelogin_django.types import UserInfo
 
 from govuk_onelogin_django.tests.test_logging import assert_event_logged
 
+
 @mock.patch.multiple(
     "govuk_onelogin_django.backends",
     get_client=mock.DEFAULT,
@@ -144,7 +145,7 @@ def test_valid_user_logs_success(db, capsys, rf, **mocks):
         email="user@example.com",
         email_verified=True,
     )
-    request = rf.get('/')
+    request = rf.get("/")
     OneLoginBackend().authenticate(request=request)
 
     assert_event_logged(capsys, "Logon", "Success", "user@example.com")
@@ -159,6 +160,6 @@ def test_valid_user_logs_success(db, capsys, rf, **mocks):
 )
 def test_invalid_user_logs_failure(db, capsys, rf, **mocks):
     mocks["has_valid_token"].return_value = False
-    request = rf.get('/')
+    request = rf.get("/")
     assert OneLoginBackend().authenticate(request=request) is None
     assert_event_logged(capsys, "Logon", "Failure")
