@@ -8,7 +8,7 @@ class Profile(TypedDict):
     email_user_id: str
 
 def log_successful_login(request: HttpRequest, userinfo: dict):
-    target_user = userinfo.get('sub') or userinfo.get('email') or "Unknown"
+    target_user = userinfo.get('email') or "Unknown"
     log_authentication(
         request,
         event=log_authentication.Event.Logon,
