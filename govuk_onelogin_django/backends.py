@@ -5,6 +5,7 @@ from django.http import HttpRequest
 
 from . import types
 from .constants import ONE_LOGIN_UNSET_NAME
+from .logging import log_successful_login, log_failed_login
 from .utils import get_client, get_userinfo, has_valid_token
 
 if TYPE_CHECKING:
@@ -24,8 +25,9 @@ class OneLoginBackend:
             user = self.get_or_create_user(userinfo)
 
         if user and self.user_can_authenticate(user):
+            log_successful_login(request, userinfo)
             return user
-
+        log_failed_login(request)
         return None
 
     def get_or_create_user(self, profile: types.UserInfo) -> "User":

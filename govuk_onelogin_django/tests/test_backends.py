@@ -11,6 +11,8 @@ from govuk_onelogin_django.types import UserInfo
     get_client=mock.DEFAULT,
     has_valid_token=mock.DEFAULT,
     get_userinfo=mock.DEFAULT,
+    log_successful_login=mock.DEFAULT,
+    log_failed_login=mock.DEFAULT,
     autospec=True,
 )
 def test_user_valid_user_create(db, rf, **mocks):
@@ -33,6 +35,8 @@ def test_user_valid_user_create(db, rf, **mocks):
     get_client=mock.DEFAULT,
     has_valid_token=mock.DEFAULT,
     get_userinfo=mock.DEFAULT,
+    log_successful_login=mock.DEFAULT,
+    log_failed_login=mock.DEFAULT,
     autospec=True,
 )
 def test_user_valid_user_not_create(db, rf, **mocks):
@@ -67,6 +71,8 @@ def test_user_valid_user_not_create(db, rf, **mocks):
     get_client=mock.DEFAULT,
     has_valid_token=mock.DEFAULT,
     get_userinfo=mock.DEFAULT,
+    log_successful_login=mock.DEFAULT,
+    log_failed_login=mock.DEFAULT,
     autospec=True,
 )
 def test_user_inactive(db, rf, **mocks):
@@ -97,6 +103,8 @@ def test_user_inactive(db, rf, **mocks):
     get_client=mock.DEFAULT,
     has_valid_token=mock.DEFAULT,
     get_userinfo=mock.DEFAULT,
+    log_successful_login=mock.DEFAULT,
+    log_failed_login=mock.DEFAULT,
     autospec=True,
 )
 def test_invalid_user(db, rf, **mocks):
@@ -119,3 +127,51 @@ def test_get_user_user_exists(db):
 
 def test_get_user_user_doesnt_exist(db):
     assert OneLoginBackend().get_user(99999) is None
+
+
+@mock.patch.multiple(
+    "govuk_onelogin_django.backends",
+    get_client=mock.DEFAULT,
+    has_valid_token=mock.DEFAULT,
+    get_userinfo=mock.DEFAULT,
+    autospec=True,
+)
+def test_valid_user_logs_success(db, rf, **mocks):
+    mocks["has_valid_token"].return_value = True
+    mocks["get_userinfo"].return_value = UserInfo(
+        sub="some-unique-key",
+        email="user@example.com",
+        email_verified=True,
+    )
+    with mock.patch("govuk_onelogin_django.logging.log_authentication") as mock_log:
+        request = rf.get("/")
+        OneLoginBackend().authenticate(request=request)
+        mock_log.assert_called_once_with(
+            mock.ANY,
+            event=mock_log.Event.Logon,
+            result=mock_log.Result.Success,
+            login_method=mock_log.LoginMethod.UKGOVSSO,
+            user={
+                "username": "user@example.com",
+            },
+        )
+
+
+@mock.patch.multiple(
+    "govuk_onelogin_django.backends",
+    get_client=mock.DEFAULT,
+    has_valid_token=mock.DEFAULT,
+    get_userinfo=mock.DEFAULT,
+    autospec=True,
+)
+def test_invalid_user_logs_failure(db, rf, **mocks):
+    mocks["has_valid_token"].return_value = False
+    with mock.patch("govuk_onelogin_django.logging.log_authentication") as mock_log:
+        request = rf.get("/")
+        assert OneLoginBackend().authenticate(request=request) is None
+        mock_log.assert_called_once_with(
+            mock.ANY,
+            event=mock_log.Event.Logon,
+            result=mock_log.Result.Failure,
+            login_method=mock_log.LoginMethod.UKGOVSSO,
+        )
