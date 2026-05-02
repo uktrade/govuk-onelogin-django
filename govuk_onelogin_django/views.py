@@ -128,6 +128,7 @@ class AuthCallbackView(View):
             logger.error("Unable to validate token")
             raise SuspiciousOperation("Unable to validate token")
 
+        # Save token to session: "authenticate" uses this to verify the user
         self.request.session[TOKEN_SESSION_KEY] = dict(token)
         delete_oauth_state(self.request)
         delete_oauth_nonce(self.request)
@@ -135,10 +136,19 @@ class AuthCallbackView(View):
         # Get or create the user
         user = authenticate(request)
 
+        # Get next_url from session before "login" (which is essentially caching the user in the
+        # session), because login can clear the session if the session belongs to another user.
+        # See https://github.com/django/django/blob/f0c269f285ab58bfb4a120141d7dd41ff4f42b45/django/contrib/auth/__init__.py#L175-L185
+        # This happens if we have multiple auth backends and the user has already authenticated
+        # with another one, for example in the case of a Staff SSO user then wanting to authenticate
+        # with GOV.UK One Login.
+        next_url = get_next_url(request) or getattr(settings, "LOGIN_REDIRECT_URL", "/")
+
         if user is not None:
             login(request, user)
 
-        next_url = get_next_url(request) or getattr(settings, "LOGIN_REDIRECT_URL", "/")
+            # Re-save token to session _after_ "login" (because login can clear the session as above)
+            self.request.session[TOKEN_SESSION_KEY] = dict(token)
 
         return redirect(next_url)
 
