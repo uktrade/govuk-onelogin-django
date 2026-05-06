@@ -30,7 +30,14 @@ def log_failed_login(request: HttpRequest) -> None:
 def _logged_out_signal_handler(sender, request, user, **kwargs) -> None:
     # The "user session" doesn't store information on which authentication backend was used.
     # We can however, use the same `has_valid_token` mechanism to check the presence of a valid OAuth token.
-    if has_valid_token(get_client(request)):
+    try:
+        # As we don't know the authentication backend, we can't assume it's govuk-onelogin-django.
+        # Therefore, silence any errors that can occur.
+        valid_token = has_valid_token(get_client(request))
+    except Exception:
+        valid_token = False
+
+    if valid_token:
         log_authentication(
             request,
             event=log_authentication.Event.Logoff,
