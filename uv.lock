@@ -537,7 +537,7 @@ wheels = [
 
 [[package]]
 name = "govuk-onelogin-django"
-version = "0.4.15"
+version = "0.4.16"
 source = { editable = "." }
 dependencies = [
     { name = "authlib" },
