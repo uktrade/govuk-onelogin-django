@@ -13,6 +13,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpRequest, QueryDict
 from django.urls import reverse
+from joserfc import jwt
 
 from . import types
 
