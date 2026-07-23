@@ -9,11 +9,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.core.cache import cache
-from django.test import Client, override_settings
+from django.test import Client, override_settings, RequestFactory
 from django.urls import reverse
 
 from govuk_onelogin_django.utils import TOKEN_SESSION_KEY, OneLoginConfig
-from govuk_onelogin_django.views import REDIRECT_SESSION_FIELD_NAME
+from govuk_onelogin_django.views import REDIRECT_SESSION_FIELD_NAME, get_next_url
 
 FAKE_OPENID_CONFIG_URL = "https://oidc.onelogin.gov.uk/.well-known/openid-configuration"
 FAKE_AUTHORIZE_URL = "https://oidc.onelogin.gov.uk/authorize"
@@ -331,3 +331,14 @@ class TestOIDCBackChannelLogoutView:
                 },
             ]
         }
+
+
+def test_get_next_url_ignores_staff_sso_redirect_session_key(settings):
+    settings.ALLOWED_HOSTS = ["testserver"]
+    request = RequestFactory().get("/")
+    request.session = {
+        "_oauth2_next": "/staff-sso/redirect/url",
+        REDIRECT_SESSION_FIELD_NAME: "/redirect/url",
+    }
+
+    assert get_next_url(request) == "/redirect/url"

@@ -48,7 +48,7 @@ def get_trust_vector(
     return {"vtr": f'["{auth_level}.{identity_level}"]'}
 
 
-REDIRECT_SESSION_FIELD_NAME = f"_oauth2_{REDIRECT_FIELD_NAME}"
+REDIRECT_SESSION_FIELD_NAME = f"_govuk_onelogin_django_{REDIRECT_FIELD_NAME}"
 
 
 def get_next_url(request):
