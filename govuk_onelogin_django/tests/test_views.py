@@ -4,13 +4,13 @@ from unittest import mock
 
 import freezegun
 import pytest
-from authlib.jose.errors import InvalidClaimError
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.core.cache import cache
 from django.test import Client, override_settings
 from django.urls import reverse
+from joserfc.errors import InvalidClaimError
 
 from govuk_onelogin_django.utils import TOKEN_SESSION_KEY, OneLoginConfig
 from govuk_onelogin_django.views import REDIRECT_SESSION_FIELD_NAME
@@ -239,6 +239,7 @@ class TestOIDCBackChannelLogoutView:
 
         assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
+    @override_settings(GOV_UK_ONE_LOGIN_CLIENT_ID="w0SG0S8PJ-4vdeW-NamkzUs-DaA")
     @freezegun.freeze_time("2025-1-13 10:49:00")
     def test_oidc_back_channel_logout_successful(self, caplog):
         # Check the user session has been removed after the back-channel logout request.
@@ -255,10 +256,11 @@ class TestOIDCBackChannelLogoutView:
             (
                 "govuk_onelogin_django.views",
                 logging.ERROR,
-                "OIDCBackChannelLogoutView: Logout Token invalid: invalid_claim: Invalid claim 'jti'",
+                "OIDCBackChannelLogoutView: Logout Token invalid: invalid_claim: Invalid claim: 'jti'",
             )
         ]
 
+    @override_settings(GOV_UK_ONE_LOGIN_CLIENT_ID="w0SG0S8PJ-4vdeW-NamkzUs-DaA")
     def test_unknown_error(self, caplog):
         response = self.client.post(self.url, data={"logout_token": self.TEST_PAYLOAD})
         assert response.status_code == HTTPStatus.OK
@@ -279,10 +281,11 @@ class TestOIDCBackChannelLogoutView:
             (
                 "govuk_onelogin_django.views",
                 logging.ERROR,
-                "OIDCBackChannelLogoutView: Unable to decode logout token: Invalid input segments length: ",
+                "OIDCBackChannelLogoutView: Unable to decode logout token: decode_error: Invalid JSON Web Signature",
             )
         ]
 
+    @override_settings(GOV_UK_ONE_LOGIN_CLIENT_ID="w0SG0S8PJ-4vdeW-NamkzUs-DaA")
     @freezegun.freeze_time("2025-1-13 10:49:00")
     def test_oidc_back_channel_logout_user_sub_error(self, caplog):
         self.user.username = "test_user_name"
@@ -290,7 +293,6 @@ class TestOIDCBackChannelLogoutView:
 
         response = self.client.post(self.url, data={"logout_token": self.TEST_PAYLOAD})
         assert response.status_code == HTTPStatus.OK
-
         assert caplog.record_tuples == [
             (
                 "govuk_onelogin_django.views",

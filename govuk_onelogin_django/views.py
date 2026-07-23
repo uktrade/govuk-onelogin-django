@@ -3,8 +3,6 @@ from http import HTTPStatus
 from typing import Any
 
 from authlib.common.security import generate_token
-from authlib.jose import JWTClaims, jwt
-from authlib.jose.errors import DecodeError, InvalidClaimError
 from django.conf import settings
 from django.contrib.auth import (
     REDIRECT_FIELD_NAME,
@@ -23,6 +21,9 @@ from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import RedirectView, View
+from joserfc import jwt
+from joserfc.errors import DecodeError, InvalidClaimError
+from joserfc.jwk import KeySet
 
 from .types import AuthenticationLevel, IdentityConfidenceLevel
 from .utils import (
@@ -49,6 +50,8 @@ def get_trust_vector(
 
 
 REDIRECT_SESSION_FIELD_NAME = f"_oauth2_{REDIRECT_FIELD_NAME}"
+BACK_CHANNEL_LOGOUT_EVENT = "http://schemas.openid.net/event/backchannel-logout"
+LOGOUT_TOKEN_JTI_CACHE_TIMEOUT = 60 * 3
 
 
 def get_next_url(request):
@@ -153,16 +156,6 @@ class AuthCallbackView(View):
         return redirect(next_url)
 
 
-class LogoutTokenClaims(JWTClaims):
-    def validate_jti(self) -> None:
-        jti = self.get("jti")
-        if cache.has_key(jti):
-            raise InvalidClaimError("jti")
-        else:
-            # Cache for three minutes
-            cache.set(jti, 1, timeout=60 * 3)
-
-
 @method_decorator(csrf_exempt, name="dispatch")
 class OIDCBackChannelLogoutView(View):
     http_method_names = ["post"]
@@ -189,44 +182,100 @@ class OIDCBackChannelLogoutView(View):
         """Validate the logout token sent from GOV.UK One Login.
 
         https://docs.sign-in.service.gov.uk/integrate-with-integration-environment/managing-your-users-sessions/#validate-your-logout-token
-        Performs the following steps:
-            1. Validate that the JWT kid claim in the logout token header exists in the JWKS (JSON web key set) returned by the /jwks endpoint.
-            2. Check the JWT alg header matches the value for the key you are using.
-            3. Use the key to validate the signature on the logout token according to the JSON Web Signature Specification.
-            4. Check the value of iss (issuer) matches the Issuer Identifier specified in GOV.UK One Login’s discovery endpoint.
-            5. Check the aud (audience) claim is the same client ID you received when you registered your service to use GOV.UK One Login.
-            6. Check the iat (issued at) claim is in the past.
-            7. Check the exp (expiry) claim is in the future.
-            8. Check the logout token contains a sub (subject identifier) claim, otherwise known as the unique ID of a user.
-            9. Check the logout token contains an events claim, which should be a JSON object with a single key:
-               http://schemas.openid.net/event/backchannel-logout – the value for the key should be an empty object.
-            10. Check your service has not received another logout token with the same jti claim in the last 3 minutes.
+        Validation is split into three stages:
+
+        1. Decode the JWT and verify its signature.
+        2. Validate the required logout-token claims.
+        3. Reject replayed tokens by validating the `jti` claim.
         """
 
         logout_token = self.request.POST.get("logout_token")
         config = get_oidc_config()
 
-        claim_options = {
-            "iss": {"essential": True, "value": config.issuer},
-            "aud": {"essential": True, "value": get_client_id(self.request)},
-            "sub": {"essential": True},
-            "events": {
-                "essential": True,
-                "value": {"http://schemas.openid.net/event/backchannel-logout": {}},
-            },
-            "jti": {"essential": True},
-        }
+        decoded_token = self.decode_logout_token(logout_token, config)
+        self.validate_logout_token_claims(decoded_token.claims, config)
+        self.validate_logout_token_jti(decoded_token.claims["jti"])
 
-        claims = jwt.decode(
-            logout_token,
-            config.get_public_keys(),
-            claims_cls=LogoutTokenClaims,
-            claims_options=claim_options,
+        return decoded_token.claims["sub"]
+
+    def decode_logout_token(self, logout_token: str | None, config):
+        """Decode the logout token and verify its signature.
+
+        Ensures the signing key can be found in the GOV.UK One Login JWKS and
+        that the JWT signature is valid.
+        """
+
+        key_set = KeySet.import_key_set(
+            {
+                "keys": config.get_public_keys(),
+            }
         )
 
-        claims.validate()
+        return jwt.decode(
+            logout_token,
+            key_set,
+        )
 
-        return claims["sub"]
+    def validate_logout_token_claims(
+        self,
+        claims: dict[str, Any],
+        config,
+    ) -> None:
+        """Validate the claims required by GOV.UK One Login.
+
+        Validates:
+        - value of iss (issuer) matches the Issuer Identifier specified in GOV.UK One Login’s discovery endpoint.
+        - aud (audience) claim is the same client ID you received when you registered your service to use GOV.UK One Login.
+        - logout token contains a sub (subject identifier) claim, otherwise known as the unique ID of a user.
+        - logout token contains an events claim, which should be a JSON object with a single key:
+        http://schemas.openid.net/event/backchannel-logout – the value for the key should be an empty object.
+        - your service has not received another logout token with the same jti (JSON Web Token ID) claim in the last 3 minutes.
+        - iat (issued at) claim is in the past.
+        - exp (expiry) claim is in the future.
+        """
+
+        claims_registry = jwt.JWTClaimsRegistry(
+            iss={
+                "essential": True,
+                "value": config.issuer,
+            },
+            aud={
+                "essential": True,
+                "values": [get_client_id(self.request)],
+            },
+            sub={
+                "essential": True,
+            },
+            events={
+                "essential": True,
+                "value": {
+                    BACK_CHANNEL_LOGOUT_EVENT: {},
+                },
+            },
+            jti={
+                "essential": True,
+            },
+            exp={
+                "essential": True,
+            },
+            iat={
+                "essential": True,
+            },
+        )
+
+        claims_registry.validate(claims)
+
+    def validate_logout_token_jti(self, jti: str) -> None:
+        """Prevent replay attacks using the logout token `jti`.
+
+        GOV.UK One Login requires services to reject logout tokens that have
+        already been processed recently. Each `jti` is cached for three minutes.
+        """
+
+        if cache.get(jti):
+            raise InvalidClaimError("jti")
+
+        cache.set(jti, True, timeout=LOGOUT_TOKEN_JTI_CACHE_TIMEOUT)
 
     def logout_user(self, sub: str) -> None:
         user = UserModel.objects.filter(**{UserModel.USERNAME_FIELD: sub}).first()
@@ -241,7 +290,7 @@ class OIDCBackChannelLogoutView(View):
         valid_sessions = Session.objects.filter(expire_date__gte=timezone.now())
 
         for session in valid_sessions:
-            # SESSION_KEY == ""_auth_user_id""
+            # SESSION_KEY == "_auth_user_id"
             if str(user.pk) == session.get_decoded().get(SESSION_KEY):
                 user_sessions.append(session.pk)
 
