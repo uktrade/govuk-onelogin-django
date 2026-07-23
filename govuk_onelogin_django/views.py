@@ -272,17 +272,10 @@ class OIDCBackChannelLogoutView(View):
         already been processed recently. Each `jti` is cached for three minutes.
         """
 
-        cache_key = self.get_logout_token_jti_cache_key(jti)
-
-        if cache.get(cache_key):
+        if cache.get(jti):
             raise InvalidClaimError("jti")
 
-        cache.set(cache_key, True, timeout=LOGOUT_TOKEN_JTI_CACHE_TIMEOUT)
-
-    def get_logout_token_jti_cache_key(self, jti: str) -> str:
-        """Return the cache key used for logout-token replay protection."""
-
-        return f"{LOGOUT_TOKEN_JTI_CACHE_KEY_PREFIX}:{jti}"
+        cache.set(jti, True, timeout=LOGOUT_TOKEN_JTI_CACHE_TIMEOUT)
 
     def logout_user(self, sub: str) -> None:
         user = UserModel.objects.filter(**{UserModel.USERNAME_FIELD: sub}).first()
