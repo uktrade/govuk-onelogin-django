@@ -173,12 +173,22 @@ class OIDCBackChannelLogoutView(View):
         except Exception as err:
             logger.error("OIDCBackChannelLogoutView: Unknown error %s", err)
         else:
+            # Log user out of there was no error
             self.logout_user(user_sub)
 
+        # Always return a 200 response to GOV.UK One Login
         return HttpResponse(status=HTTPStatus.OK)
 
     def validate_logout_token(self) -> str:
-        """Validate the logout token sent from GOV.UK One Login."""
+        """Validate the logout token sent from GOV.UK One Login.
+
+        https://docs.sign-in.service.gov.uk/integrate-with-integration-environment/managing-your-users-sessions/#validate-your-logout-token
+        Validation is split into three stages:
+
+        1. Decode the JWT and verify its signature.
+        2. Validate the required logout-token claims.
+        3. Reject replayed tokens by validating the `jti` claim.
+        """
 
         logout_token = self.request.POST.get("logout_token")
         config = get_oidc_config()
@@ -190,6 +200,12 @@ class OIDCBackChannelLogoutView(View):
         return decoded_token.claims["sub"]
 
     def decode_logout_token(self, logout_token: str | None, config):
+        """Decode the logout token and verify its signature.
+
+        Ensures the signing key can be found in the GOV.UK One Login JWKS and
+        that the JWT signature is valid.
+        """
+
         key_set = KeySet.import_key_set(
             {
                 "keys": config.get_public_keys(),
@@ -206,6 +222,18 @@ class OIDCBackChannelLogoutView(View):
         claims: dict[str, Any],
         config,
     ) -> None:
+        """Validate the claims required by GOV.UK One Login.
+        
+        Validates:
+        - issuer (`iss`)
+        - audience (`aud`)
+        - subject (`sub`)
+        - logout event (`events`)
+        - JWT ID (`jti`)
+        - issued-at (`iat`)
+        - expiry (`exp`)
+        """
+
         claims_registry = jwt.JWTClaimsRegistry(
             iss={
                 "essential": True,
@@ -238,6 +266,12 @@ class OIDCBackChannelLogoutView(View):
         claims_registry.validate(claims)
 
     def validate_logout_token_jti(self, jti: str) -> None:
+        """Prevent replay attacks using the logout token `jti`.
+
+        GOV.UK One Login requires services to reject logout tokens that have
+        already been processed recently. Each `jti` is cached for three minutes.
+        """
+
         cache_key = self.get_logout_token_jti_cache_key(jti)
 
         if cache.get(cache_key):
@@ -246,6 +280,8 @@ class OIDCBackChannelLogoutView(View):
         cache.set(cache_key, True, timeout=LOGOUT_TOKEN_JTI_CACHE_TIMEOUT)
 
     def get_logout_token_jti_cache_key(self, jti: str) -> str:
+        """Return the cache key used for logout-token replay protection."""
+
         return f"{LOGOUT_TOKEN_JTI_CACHE_KEY_PREFIX}:{jti}"
 
     def logout_user(self, sub: str) -> None:
