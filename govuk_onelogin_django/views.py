@@ -224,14 +224,14 @@ class OIDCBackChannelLogoutView(View):
         """Validate the claims required by GOV.UK One Login.
         
         Validates:
-        - Check the value of iss (issuer) matches the Issuer Identifier specified in GOV.UK One Login’s discovery endpoint.
-        - Check the aud (audience) claim is the same client ID you received when you registered your service to use GOV.UK One Login.
-        - Check the logout token contains a sub (subject identifier) claim, otherwise known as the unique ID of a user.
-        - Check the logout token contains an events claim, which should be a JSON object with a single key:
+        - value of iss (issuer) matches the Issuer Identifier specified in GOV.UK One Login’s discovery endpoint.
+        - aud (audience) claim is the same client ID you received when you registered your service to use GOV.UK One Login.
+        - logout token contains a sub (subject identifier) claim, otherwise known as the unique ID of a user.
+        - logout token contains an events claim, which should be a JSON object with a single key:
         http://schemas.openid.net/event/backchannel-logout – the value for the key should be an empty object.
-        - Check your service has not received another logout token with the same jti (JSON Web Token ID) claim in the last 3 minutes.
-        - Check the iat (issued at) claim is in the past.
-        - Check the exp (expiry) claim is in the future.
+        - your service has not received another logout token with the same jti (JSON Web Token ID) claim in the last 3 minutes.
+        - iat (issued at) claim is in the past.
+        - exp (expiry) claim is in the future.
         """
 
         claims_registry = jwt.JWTClaimsRegistry(
