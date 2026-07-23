@@ -6,9 +6,7 @@ from typing import Any
 
 import requests
 from authlib.integrations.requests_client import OAuth2Session
-from authlib.jose import jwt
 from authlib.oauth2.rfc7523 import PrivateKeyJWT
-from authlib.oidc.core import IDToken
 from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpRequest, QueryDict
@@ -132,17 +130,27 @@ def validate_token(request: HttpRequest, token: dict[str, Any]) -> None:
 
     # id_token contents:
     # https://docs.sign-in.service.gov.uk/integrate-with-integration-environment/authenticate-your-user/#understand-your-id-token
-    claims = jwt.decode(
+    decoded_token = jwt.decode(
         token["id_token"],
-        config.get_public_keys(),
-        claims_cls=IDToken,
-        claims_options={
-            "iss": {"essential": True, "value": config.issuer},
-            "aud": {"essential": True, "value": get_client_id(request)},
-        },
-        claims_params={"nonce": stored_nonce},
+        config.get_public_keys() 
+
     )
-    claims.validate()
+    claims_registry = jwt.JWTClaimsRegistry(
+        iss={
+            "essential": True,
+            "value": config.issuer,
+        },
+        aud={
+            "essential": True,
+            "values": [get_client_id(request)],
+        },
+        nonce={
+            "essential": True,
+            "value": stored_nonce,
+        },
+    )
+
+    claims_registry.validate(decoded_token.claims)
 
 
 def get_userinfo(client: OAuth2Session) -> types.UserInfo:
