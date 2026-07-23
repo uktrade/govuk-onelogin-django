@@ -130,11 +130,7 @@ def validate_token(request: HttpRequest, token: dict[str, Any]) -> None:
 
     # id_token contents:
     # https://docs.sign-in.service.gov.uk/integrate-with-integration-environment/authenticate-your-user/#understand-your-id-token
-    decoded_token = jwt.decode(
-        token["id_token"],
-        config.get_public_keys() 
-
-    )
+    decoded_token = jwt.decode(token["id_token"], config.get_public_keys())
     claims_registry = jwt.JWTClaimsRegistry(
         iss={
             "essential": True,

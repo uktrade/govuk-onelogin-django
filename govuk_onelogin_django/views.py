@@ -222,7 +222,7 @@ class OIDCBackChannelLogoutView(View):
         config,
     ) -> None:
         """Validate the claims required by GOV.UK One Login.
-        
+
         Validates:
         - value of iss (issuer) matches the Issuer Identifier specified in GOV.UK One Login’s discovery endpoint.
         - aud (audience) claim is the same client ID you received when you registered your service to use GOV.UK One Login.
