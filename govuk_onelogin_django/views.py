@@ -51,7 +51,6 @@ def get_trust_vector(
 
 REDIRECT_SESSION_FIELD_NAME = f"_oauth2_{REDIRECT_FIELD_NAME}"
 BACK_CHANNEL_LOGOUT_EVENT = "http://schemas.openid.net/event/backchannel-logout"
-LOGOUT_TOKEN_JTI_CACHE_KEY_PREFIX = "one_login_logout_token_jti"
 LOGOUT_TOKEN_JTI_CACHE_TIMEOUT = 60 * 3
 
 
