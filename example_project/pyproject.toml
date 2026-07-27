@@ -6,6 +6,6 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "django>=4.2",
-    "govuk-onelogin-django>=0.4.19",
+    "govuk-onelogin-django>=0.4.20",
     "pydantic-settings>=2.7.0",
 ]
