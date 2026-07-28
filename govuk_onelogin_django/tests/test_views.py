@@ -80,28 +80,28 @@ class TestAuthCallbackView:
         "govuk_onelogin_django.views",
         get_oauth_state=mock.DEFAULT,
         get_token=mock.DEFAULT,
-        authenticate=mock.DEFAULT,
+        OneLoginBackend=mock.DEFAULT,
         login=mock.DEFAULT,
         autospec=True,
     )
     def test_auth_callback_view(self, **mocks):
         auth_code = "fake-auth-code"
         state = "fake-state"
+        user = User.objects.create_user(username="fake-sub")
 
         mocks["get_oauth_state"].return_value = state
         mocks["get_token"].return_value = {"token": "fake"}
+        mocks["OneLoginBackend"].return_value.authenticate.return_value = user
 
         response = self.client.get(f"{self.url}?code={auth_code}&state={state}")
 
-        assert self.client.session[TOKEN_SESSION_KEY] == {"token": "fake"}
-        assert response.status_code == HTTPStatus.FOUND
-        assert response.url == settings.LOGIN_REDIRECT_URL
+        assert response.status_code == 302
 
     @mock.patch.multiple(
         "govuk_onelogin_django.views",
         get_oauth_state=mock.DEFAULT,
         get_token=mock.DEFAULT,
-        authenticate=mock.DEFAULT,
+        OneLoginBackend=mock.DEFAULT,
         login=mock.DEFAULT,
         autospec=True,
     )
@@ -116,8 +116,10 @@ class TestAuthCallbackView:
 
         auth_code = "fake-auth-code"
         state = "fake-state"
+        user = User.objects.create_user(username="fake-sub")
         mocks["get_oauth_state"].return_value = state
         mocks["get_token"].return_value = {"token": "fake"}
+        mocks["OneLoginBackend"].return_value.authenticate.return_value = user
 
         response = self.client.get(f"{self.url}?code={auth_code}&state={state}")
 

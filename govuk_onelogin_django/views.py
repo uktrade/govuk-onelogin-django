@@ -9,7 +9,6 @@ from django.conf import settings
 from django.contrib.auth import (
     REDIRECT_FIELD_NAME,
     SESSION_KEY,
-    authenticate,
     get_user_model,
     login,
 )
@@ -24,6 +23,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import RedirectView, View
 
+from .backends import OneLoginBackend
 from .types import AuthenticationLevel, IdentityConfidenceLevel
 from .utils import (
     TOKEN_SESSION_KEY,
@@ -134,7 +134,7 @@ class AuthCallbackView(View):
         delete_oauth_nonce(self.request)
 
         # Get or create the user
-        user = authenticate(request)
+        user = OneLoginBackend().authenticate(request)
 
         # Get next_url from session before "login" (which is essentially caching the user in the
         # session), because login can clear the session if the session belongs to another user.
@@ -145,7 +145,9 @@ class AuthCallbackView(View):
         next_url = get_next_url(request) or getattr(settings, "LOGIN_REDIRECT_URL", "/")
 
         if user is not None:
-            login(request, user)
+            login(
+                request, user, backend="govuk_onelogin_django.backends.OneLoginBackend"
+            )
 
             # Re-save token to session _after_ "login" (because login can clear the session as above)
             self.request.session[TOKEN_SESSION_KEY] = dict(token)
