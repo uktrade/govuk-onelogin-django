@@ -594,7 +594,7 @@ wheels = [
 
 [[package]]
 name = "django-log-formatter-asim"
-version = "1.3.1"
+version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ddtrace" },
@@ -602,9 +602,9 @@ dependencies = [
     { name = "django", version = "6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "django-ipware" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/54/6ed44846bab2b1a7c93f57099b9df960814040d0b79ecd3520aa4e922ba5/django_log_formatter_asim-1.3.1.tar.gz", hash = "sha256:1a3cba32817aa8a7622824a7010b1d477585d4f40566bf59536bd49ea451a9c4", size = 15167, upload-time = "2026-07-22T15:19:34.807Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/94/25db9550594218afdeb665285b34a62ac03a2ab437cbc217e8d355cacf01/django_log_formatter_asim-1.4.0.tar.gz", hash = "sha256:767600472c5eca0e0f0f3dddaa1e65a6f746c5e6f924e03ef20e758aa1ccbc14", size = 15221, upload-time = "2026-08-24T16:03:24.334Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ea/d4/fc8fb9c583704cbf897d6d53dec4c00a2bd0cd1c890cdb46d9390044fe15/django_log_formatter_asim-1.3.1-py3-none-any.whl", hash = "sha256:87907adc4414c543e8d899ccee6a475e05ae3f1cd02453b895e7cb3e597beca8", size = 16427, upload-time = "2026-07-22T15:19:35.7Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/fe/a11ee445529bf4f71486d751b4fd4084907ed1027c5b4bcd174a2ac9ae41/django_log_formatter_asim-1.4.0-py3-none-any.whl", hash = "sha256:cc5872522ce679c1d8cd3f798f76e66b150f1f9460c48b9735ad11766a01efd0", size = 16515, upload-time = "2026-08-24T16:03:25.175Z" },
 ]
 
 [[package]]
