@@ -1,6 +1,9 @@
 import enum
 from typing import TypedDict
 
+from django.contrib.sessions.backends.base import SessionBase
+from django.http import HttpRequest
+
 
 class UserInfo(TypedDict):
     # https://docs.sign-in.service.gov.uk/integrate-with-integration-environment/authenticate-your-user/#retrieve-user-information
@@ -30,3 +33,9 @@ class IdentityConfidenceLevel(enum.StrEnum):
     NONE = "P0"
     LOW = "P1"
     MEDIUM = "P2"
+
+
+class DjangoHttpRequest(HttpRequest):
+    """Add a typed version of HttpRequest indicating a session is required"""
+
+    session: SessionBase

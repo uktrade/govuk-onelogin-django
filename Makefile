@@ -5,6 +5,20 @@ init:
 build:
 	uv build --no-sources
 
+##@ Linting & formatting
+ruff-check: ## Run the Ruff linter
+	uv run ruff check
+
+ruff-check-fix: ## Run the Ruff linter and resolve fixable errors
+	uv run ruff check --fix
+
+ruff-format: ## Run the Ruff formatter
+	make ruff-check-fix
+	uv run ruff format
+
+ty-check: ## Run ty type checker
+	uv run ty check
+
 # Commands for running tests and coverage
 test:
 	uv run pytest
@@ -14,8 +28,3 @@ coverage:
 
 coverage-html:
 	uv run coverage html
-
-format: ## Run the Ruff formatter
-	# https://docs.astral.sh/ruff/formatter/#sorting-imports
-	uv run ruff check --select I --fix
-	uv run ruff format

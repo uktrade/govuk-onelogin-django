@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.core.cache import cache
-from django.test import Client, override_settings, RequestFactory
+from django.test import Client, RequestFactory, override_settings
 from django.urls import reverse
 
 from govuk_onelogin_django.utils import TOKEN_SESSION_KEY, OneLoginConfig
