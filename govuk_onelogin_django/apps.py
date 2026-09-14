@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+
 from .logging import enable_logout_logging
 
 

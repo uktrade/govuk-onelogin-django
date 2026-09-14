@@ -1,11 +1,10 @@
 from typing import TYPE_CHECKING, Any, Literal
 
 from django.contrib.auth import get_user_model
-from django.http import HttpRequest
 
 from . import types
 from .constants import ONE_LOGIN_UNSET_NAME
-from .logging import log_successful_login, log_failed_login
+from .logging import log_failed_login, log_successful_login
 from .utils import get_client, get_userinfo, has_valid_token
 
 if TYPE_CHECKING:
@@ -15,7 +14,9 @@ UserModel = get_user_model()
 
 
 class OneLoginBackend:
-    def authenticate(self, request: HttpRequest, **credentials: Any) -> "User | None":
+    def authenticate(
+        self, request: types.DjangoHttpRequest, **credentials: Any
+    ) -> "User | None":
         user = None
         client = get_client(request)
 

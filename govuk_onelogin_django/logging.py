@@ -1,8 +1,9 @@
+from django.contrib.auth.signals import user_logged_out
 from django.http import HttpRequest
 from django_log_formatter_asim.events import log_authentication
-from .utils import has_valid_token, get_client
+
 from . import types
-from django.contrib.auth.signals import user_logged_out
+from .utils import get_client, has_valid_token
 
 
 def log_successful_login(request: HttpRequest, userinfo: types.UserInfo) -> None:

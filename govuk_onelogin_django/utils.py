@@ -11,7 +11,7 @@ from authlib.oauth2.rfc7523 import PrivateKeyJWT
 from authlib.oidc.core import IDToken
 from django.conf import settings
 from django.core.cache import cache
-from django.http import HttpRequest, QueryDict
+from django.http import QueryDict
 from django.urls import reverse
 
 from . import types
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 TOKEN_SESSION_KEY = "_one_login_token"
 
 
-def get_client(request: HttpRequest) -> OAuth2Session:
+def get_client(request: types.DjangoHttpRequest) -> OAuth2Session:
     callback_url = reverse("one_login:callback")
     redirect_uri = request.build_absolute_uri(callback_url)
 
@@ -105,7 +105,7 @@ class OneLoginConfig:
         return self.openid_config["issuer"]
 
 
-def get_token(request: HttpRequest, auth_code: str) -> dict:
+def get_token(request: types.DjangoHttpRequest, auth_code: str) -> dict:
     client = get_client(request)
     config = get_oidc_config()
 
@@ -125,7 +125,7 @@ def get_token(request: HttpRequest, auth_code: str) -> dict:
     return token
 
 
-def validate_token(request: HttpRequest, token: dict[str, Any]) -> None:
+def validate_token(request: types.DjangoHttpRequest, token: dict[str, Any]) -> None:
     config = get_oidc_config()
     stored_nonce = get_oauth_nonce(request)
 
@@ -156,31 +156,31 @@ def has_valid_token(client: OAuth2Session) -> bool:
     return client.token is not None
 
 
-def store_oauth_state(request: HttpRequest, state: str) -> None:
+def store_oauth_state(request: types.DjangoHttpRequest, state: str) -> None:
     request.session[f"{TOKEN_SESSION_KEY}_oauth_state"] = state
 
 
-def get_oauth_state(request: HttpRequest) -> str | None:
+def get_oauth_state(request: types.DjangoHttpRequest) -> str | None:
     return request.session.get(f"{TOKEN_SESSION_KEY}_oauth_state", None)
 
 
-def delete_oauth_state(request: HttpRequest) -> None:
+def delete_oauth_state(request: types.DjangoHttpRequest) -> None:
     request.session.delete(f"{TOKEN_SESSION_KEY}_oauth_state")
 
 
-def store_oauth_nonce(request: HttpRequest, nonce: str) -> None:
+def store_oauth_nonce(request: types.DjangoHttpRequest, nonce: str) -> None:
     request.session[f"{TOKEN_SESSION_KEY}_oauth_nonce"] = nonce
 
 
-def get_oauth_nonce(request: HttpRequest) -> str | None:
+def get_oauth_nonce(request: types.DjangoHttpRequest) -> str | None:
     return request.session.get(f"{TOKEN_SESSION_KEY}_oauth_nonce", None)
 
 
-def delete_oauth_nonce(request: HttpRequest) -> None:
+def delete_oauth_nonce(request: types.DjangoHttpRequest) -> None:
     request.session.delete(f"{TOKEN_SESSION_KEY}_oauth_nonce")
 
 
-def get_secret(request: HttpRequest) -> bytes:
+def get_secret(request: types.DjangoHttpRequest) -> bytes:
     # key is stored like this: base64 -i private_key.pem so decode.
     return base64.b64decode(get_client_secret(request))
 
@@ -189,7 +189,7 @@ def get_scope():
     return getattr(settings, "GOV_UK_ONE_LOGIN_SCOPE", "openid email")
 
 
-def get_client_id(request: HttpRequest) -> str:
+def get_client_id(request: types.DjangoHttpRequest) -> str:
     """Fetch the client id in one of two ways.
 
     1. Using a function called get_one_login_client_id defined in the module specified at
@@ -234,7 +234,7 @@ def get_oidc_config() -> OneLoginConfig:
     return OneLoginConfig()
 
 
-def get_client_secret(request: HttpRequest) -> str:
+def get_client_secret(request: types.DjangoHttpRequest) -> str:
     """Fetch the client secret in one of two ways.
 
     1. Using a function called get_one_login_client_secret defined in the module specified at
@@ -256,7 +256,7 @@ def get_client_secret(request: HttpRequest) -> str:
 
 
 def get_one_login_logout_url(
-    request: HttpRequest, post_logout_redirect_uri: str | None = None
+    request: types.DjangoHttpRequest, post_logout_redirect_uri: str | None = None
 ) -> str:
     """Get logout url for logging a user out of GOV.UK One Login.
 

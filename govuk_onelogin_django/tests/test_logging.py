@@ -1,6 +1,8 @@
 from unittest import mock
-from govuk_onelogin_django.logging import enable_logout_logging
+
 from django.contrib.auth.signals import user_logged_out
+
+from govuk_onelogin_django.logging import enable_logout_logging
 
 
 @mock.patch("govuk_onelogin_django.logging.get_client", mock.Mock())

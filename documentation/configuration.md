@@ -70,7 +70,6 @@ class CustomOIDCBackChannelLogoutView(OIDCBackChannelLogoutView):
             )
             return
 
-
         user_sessions = []
         for key in cache.keys(f"{KEY_PREFIX}*"):
             session = cache.get(key)
@@ -84,7 +83,11 @@ class CustomOIDCBackChannelLogoutView(OIDCBackChannelLogoutView):
 ```python
 urlpatterns = [
     ...,
-    path("back-channel-logout/", CustomOIDCBackChannelLogoutView.as_view(), name="back-channel-logout"),
+    path(
+        "back-channel-logout/",
+        CustomOIDCBackChannelLogoutView.as_view(),
+        name="back-channel-logout",
+    ),
 ]
 ```
 

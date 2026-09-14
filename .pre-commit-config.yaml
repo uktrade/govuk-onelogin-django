@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/uktrade/github-standards
-    rev: v1.3.1  # This should be the latest github released tag, see https://github.com/uktrade/github-standards/releases for the latest tag
+    rev: v1.4.3  # This should be the latest github released tag, see https://github.com/uktrade/github-standards/releases for the latest tag
     hooks:
       - id: validate-security-scan
 #        verbose: true # This is helpful for debugging initial setup, it can be removed when the hooks are verified as working in your repository
@@ -28,7 +28,7 @@ repos:
       - id: check-added-large-files
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.14.10
+    rev: v0.16.7
     hooks:
       # Run the linter.
       - id: ruff-check

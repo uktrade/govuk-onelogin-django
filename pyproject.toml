@@ -56,33 +56,65 @@ dev = [
     "ruff>=0.8.6",
     "coverage>=7.6.10",
     "freezegun>=1.5.1",
+    "ty>=0.0.80",
 ]
 
 [tool.hatch.build.targets.sdist]
 exclude = ["example_project/"]
 
+#
+# Global ruff check / format and ty config
+#
+[tool.ruff]
+target-version= "py311"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[tool.ruff.lint]
+extend-select = [
+    # https://docs.astral.sh/ruff/rules/#flake8-import-conventions-icn
+    "ICN"
+]
+ignore = [
+    #
+    # Lint errors we always want to ignore.
+    #
+    # Ignore Mutable class default as they are used all over in django
+    # https://docs.astral.sh/ruff/rules/mutable-class-default/
+    "RUF012",
+    "BLE001", # Do not catch blind exception: `Exception`
+]
+
+# https://github.com/marcgibbons/flake8-datetime-import#using-ruff-instead
+[tool.ruff.lint.flake8-import-conventions]
+banned-from = [
+  "datetime",  # Use `import datetime as dt`, not `from datetime import ...`
+  "time",      # Use `import time as tm`, not `from time import ...`
+]
+
+[tool.ruff.lint.flake8-import-conventions.extend-aliases]
+datetime = "dt"
+time = "tm"
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "govuk_onelogin_django.tests.test_settings"
 pythonpath = ["."]
 
-[tool.mypy]
-packages = "govuk_onelogin_django"
-
-[[tool.mypy.overrides]]
-module = [
-    "django.*",
-    "pytest.*",
-    "authlib.*",
-    "requests.*",
-    "pydantic.*",
-    "pydantic_settings.*",
-    "freezegun.*"
+[tool.ty.src]
+exclude = [
+    "example_project",
 ]
-ignore_missing_imports = true
-
-[tool.isort]
-profile = "black"
-
 
 [tool.coverage.report]
 exclude_lines = [

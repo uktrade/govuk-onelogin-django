@@ -28,7 +28,7 @@ Before starting, you should create an example app using the GOV.OK One Login [ad
     ```
 2. Include the govuk_onelogin_django URLconf in your project urls.py like this:
     ```python
-    path("one-login/", include("govuk_onelogin_django.urls")),
+    path("one-login/", include("govuk_onelogin_django.urls"))
     ```
 3. Include OneLoginBackend to your AUTHENTICATION_BACKENDS like this:
     ```python
