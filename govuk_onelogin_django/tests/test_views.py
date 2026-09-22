@@ -4,16 +4,18 @@ from unittest import mock
 
 import freezegun
 import pytest
-from authlib.jose.errors import InvalidClaimError
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.core.cache import cache
 from django.test import Client, RequestFactory, override_settings
 from django.urls import reverse
+from joserfc import errors
 
 from govuk_onelogin_django.utils import TOKEN_SESSION_KEY, OneLoginConfig
 from govuk_onelogin_django.views import REDIRECT_SESSION_FIELD_NAME, get_next_url
+
+from .helpers import AnyClientID
 
 FAKE_OPENID_CONFIG_URL = "https://oidc.onelogin.gov.uk/.well-known/openid-configuration"
 FAKE_AUTHORIZE_URL = "https://oidc.onelogin.gov.uk/authorize"
@@ -26,6 +28,7 @@ def correct_settings():
     with override_settings(
         GOV_UK_ONE_LOGIN_ENABLED=True,
         GOV_UK_ONE_LOGIN_OPENID_CONFIG_URL=FAKE_OPENID_CONFIG_URL,
+        GOV_UK_ONE_LOGIN_CLIENT_ID=AnyClientID(),
     ):
         yield None
 
@@ -186,7 +189,7 @@ class TestAuthCallbackView:
         state = "fake-state"
 
         mocks["get_oauth_state"].return_value = state
-        mocks["get_token"].side_effect = InvalidClaimError("claim_value")
+        mocks["get_token"].side_effect = errors.InvalidClaimError("claim_value")
 
         response = self.client.get(f"{self.url}?code={auth_code}&state={state}")
         assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -255,7 +258,7 @@ class TestOIDCBackChannelLogoutView:
             (
                 "govuk_onelogin_django.views",
                 logging.ERROR,
-                "OIDCBackChannelLogoutView: Logout Token invalid: invalid_claim: Invalid claim 'jti'",
+                "OIDCBackChannelLogoutView: Logout Token invalid: invalid_claim: Invalid claim: 'jti'",
             )
         ]
 
@@ -279,7 +282,7 @@ class TestOIDCBackChannelLogoutView:
             (
                 "govuk_onelogin_django.views",
                 logging.ERROR,
-                "OIDCBackChannelLogoutView: Unable to decode logout token: Invalid input segments length: ",
+                "OIDCBackChannelLogoutView: Unable to decode logout token: decode_error: Invalid JSON Web Signature",
             )
         ]
 

@@ -1,18 +1,20 @@
 import base64
+import hmac
 import json
 import logging
 from importlib import import_module
-from typing import Any
+from typing import Any, Self
 
 import requests
+from authlib.common.encoding import to_bytes
 from authlib.integrations.requests_client import OAuth2Session
-from authlib.jose import jwt
 from authlib.oauth2.rfc7523 import PrivateKeyJWT
-from authlib.oidc.core import IDToken
+from authlib.oidc.core.util import create_half_hash
 from django.conf import settings
 from django.core.cache import cache
 from django.http import QueryDict
 from django.urls import reverse
+from joserfc import errors, jwk, jwt
 
 from . import types
 
@@ -120,28 +122,85 @@ def get_token(request: types.DjangoHttpRequest, auth_code: str) -> dict:
         grant_type="authorization_code",
     )
 
-    validate_token(request, token)
+    client_id = get_client_id(request)
+    stored_nonce = get_oauth_nonce(request)
+    validate_token(token, client_id, stored_nonce)  # ty: ignore[invalid-argument-type]
 
     return token
 
 
-def validate_token(request: types.DjangoHttpRequest, token: dict[str, Any]) -> None:
+class IDTokenJWTClaimsRegistry(jwt.JWTClaimsRegistry):
+    """Subclass of JWTClaimsRegistry to validate at_hash claim"""
+
+    def __init__(self, *args, token: jwt.Token, access_token: dict[str, Any], **kwargs):
+        super().__init__(*args, **kwargs)
+        self.token = token
+        self.access_token = access_token
+
+    @classmethod
+    def from_config(
+        cls,
+        token: jwt.Token,
+        access_token: dict[str, Any],
+        iss_value: str,
+        aud_value: str,
+        nonce_value: str,
+    ) -> Self:
+        claim_options: dict[str, jwt.ClaimsOption] = {
+            "iss": jwt.ClaimsOption(essential=True, value=iss_value),
+            "aud": jwt.ClaimsOption(essential=True, value=aud_value),
+            "nonce": jwt.ClaimsOption(essential=True, value=nonce_value),
+            "exp": jwt.ClaimsOption(essential=True),
+            "iat": jwt.ClaimsOption(essential=True),
+        }
+
+        return cls(token=token, access_token=access_token, leeway=5, **claim_options)
+
+    def validate_at_hash(self, value: str) -> None:
+        """OPTIONAL. Access Token hash value. Its value is the base64url
+        encoding of the left-most half of the hash of the octets of the ASCII
+        representation of the access_token value, where the hash algorithm
+        used is the hash algorithm used in the alg Header Parameter of the
+        ID Token's JOSE Header. For instance, if the alg is RS256, hash the
+        access_token value with SHA-256, then take the left-most 128 bits and
+        base64url encode them. The at_hash value is a case-sensitive string.
+        """
+
+        def _verify_hash(signature, s, alg):
+            hash_value = create_half_hash(s, alg)
+            if hash_value is None:
+                return False
+            return hmac.compare_digest(hash_value, to_bytes(signature))
+
+        access_token = self.access_token
+        at_hash = value
+
+        if (
+            at_hash
+            and access_token
+            and not _verify_hash(at_hash, access_token, self.token.header["alg"])
+        ):
+            raise errors.InvalidClaimError("at_hash")
+
+
+def validate_token(token: dict[str, Any], client_id: str, stored_nonce: str) -> None:
     config = get_oidc_config()
-    stored_nonce = get_oauth_nonce(request)
 
     # id_token contents:
     # https://docs.sign-in.service.gov.uk/integrate-with-integration-environment/authenticate-your-user/#understand-your-id-token
-    claims = jwt.decode(
-        token["id_token"],
-        config.get_public_keys(),
-        claims_cls=IDToken,
-        claims_options={
-            "iss": {"essential": True, "value": config.issuer},
-            "aud": {"essential": True, "value": get_client_id(request)},
-        },
-        claims_params={"nonce": stored_nonce},
+    signed_jwt = token["id_token"]  # The JWT to decode
+    keys = [jwk.import_key(k) for k in config.get_public_keys()]  # ty: ignore[invalid-argument-type]
+    keyset = jwk.KeySet(keys)
+    decoded_token: jwt.Token = jwt.decode(signed_jwt, keyset)
+
+    claims_requests = IDTokenJWTClaimsRegistry.from_config(
+        token=decoded_token,
+        access_token=token["access_token"],
+        iss_value=config.issuer,
+        aud_value=client_id,
+        nonce_value=stored_nonce,
     )
-    claims.validate()
+    claims_requests.validate(decoded_token.claims)
 
 
 def get_userinfo(client: OAuth2Session) -> types.UserInfo:
