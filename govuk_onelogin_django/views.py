@@ -3,8 +3,6 @@ from http import HTTPStatus
 from typing import Any
 
 from authlib.common.security import generate_token
-from authlib.jose import JWTClaims, jwt
-from authlib.jose.errors import DecodeError, InvalidClaimError
 from django.conf import settings
 from django.contrib.auth import (
     REDIRECT_FIELD_NAME,
@@ -23,6 +21,7 @@ from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import RedirectView, View
+from joserfc import errors, jwk, jwt
 
 from .types import AuthenticationLevel, IdentityConfidenceLevel
 from .utils import (
@@ -124,7 +123,7 @@ class AuthCallbackView(View):
 
         try:
             token = get_token(self.request, auth_code)
-        except InvalidClaimError:
+        except errors.InvalidClaimError:
             logger.error("Unable to validate token")
             raise SuspiciousOperation("Unable to validate token")
 
@@ -153,14 +152,13 @@ class AuthCallbackView(View):
         return redirect(next_url)
 
 
-class LogoutTokenClaims(JWTClaims):
-    def validate_jti(self) -> None:
-        jti = self.get("jti")
-        if cache.has_key(jti):
-            raise InvalidClaimError("jti")
+class LogoutTokenJWTClaimsRegistry(jwt.JWTClaimsRegistry):
+    def validate_jti(self, value):
+        if cache.has_key(value):
+            raise errors.InvalidClaimError("jti")
         else:
             # Cache for three minutes
-            cache.set(jti, 1, timeout=60 * 3)
+            cache.set(value, 1, timeout=60 * 3)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -170,11 +168,11 @@ class OIDCBackChannelLogoutView(View):
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         try:
             user_sub = self.validate_logout_token()
-        except DecodeError as err:
+        except errors.DecodeError as err:
             logger.error(
                 "OIDCBackChannelLogoutView: Unable to decode logout token: %s", err
             )
-        except InvalidClaimError as err:
+        except errors.InvalidClaimError as err:
             logger.error("OIDCBackChannelLogoutView: Logout Token invalid: %s", err)
         except Exception as err:
             logger.error("OIDCBackChannelLogoutView: Unknown error %s", err)
@@ -190,10 +188,10 @@ class OIDCBackChannelLogoutView(View):
 
         https://docs.sign-in.service.gov.uk/integrate-with-integration-environment/managing-your-users-sessions/#validate-your-logout-token
         Performs the following steps:
-            1. Validate that the JWT kid claim in the logout token header exists in the JWKS (JSON web key set) returned by the /jwks endpoint.
+            1. Validate that the JWT kid claim in the logout token header exists in the JWKS (JSON Web Key Set) returned by the /jwks endpoint.
             2. Check the JWT alg header matches the value for the key you are using.
             3. Use the key to validate the signature on the logout token according to the JSON Web Signature Specification.
-            4. Check the value of iss (issuer) matches the Issuer Identifier specified in GOV.UK One Login’s discovery endpoint.
+            4. Check the value of iss (issuer) matches the ‘issuer’ identifier specified in GOV.UK One Login’s discovery endpoint.
             5. Check the aud (audience) claim is the same client ID you received when you registered your service to use GOV.UK One Login.
             6. Check the iat (issued at) claim is in the past.
             7. Check the exp (expiry) claim is in the future.
@@ -206,27 +204,26 @@ class OIDCBackChannelLogoutView(View):
         logout_token = self.request.POST.get("logout_token")
         config = get_oidc_config()
 
-        claim_options = {
-            "iss": {"essential": True, "value": config.issuer},
-            "aud": {"essential": True, "value": get_client_id(self.request)},
-            "sub": {"essential": True},
-            "events": {
-                "essential": True,
-                "value": {"http://schemas.openid.net/event/backchannel-logout": {}},
-            },
-            "jti": {"essential": True},
+        event_value = {"http://schemas.openid.net/event/backchannel-logout": {}}
+
+        claim_options: dict[str, jwt.ClaimsOption] = {
+            "iss": jwt.ClaimsOption(essential=True, value=config.issuer),
+            "sub": jwt.ClaimsOption(essential=True),
+            "aud": jwt.ClaimsOption(essential=True, value=get_client_id(self.request)),
+            "iat": jwt.ClaimsOption(essential=True),
+            "exp": jwt.ClaimsOption(essential=True),
+            "events": jwt.ClaimsOption(essential=True, value=event_value),  # ty: ignore[invalid-argument-type]
+            "jti": jwt.ClaimsOption(essential=True),
         }
 
-        claims = jwt.decode(
-            logout_token,
-            config.get_public_keys(),
-            claims_cls=LogoutTokenClaims,
-            claims_options=claim_options,
-        )
+        keys = [jwk.import_key(k) for k in config.get_public_keys()]  # ty: ignore[invalid-argument-type]
+        keyset = jwk.KeySet(keys)
+        decoded_token: jwt.Token = jwt.decode(logout_token, keyset)
 
-        claims.validate()
+        claims_requests = LogoutTokenJWTClaimsRegistry(**claim_options)  # ty: ignore[invalid-argument-type]
+        claims_requests.validate(decoded_token.claims)
 
-        return claims["sub"]
+        return decoded_token.claims["sub"]
 
     def logout_user(self, sub: str) -> None:
         user = UserModel.objects.filter(**{UserModel.USERNAME_FIELD: sub}).first()
